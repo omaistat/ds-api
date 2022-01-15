@@ -12,8 +12,12 @@ def hello_techies():
    
 module_dir = os.path.abspath(os.path.dirname(__file__))
 file_path = os.path.join(module_dir, "cleaned_data_num.csv")
-df = pd.read_csv(file_path, sep=",")
+df_raw = pd.read_csv(file_path, sep=",")
 
+@app.route("/raw_data/json", methods=["GET"])
+def return_json():
+    return Response(df_raw.to_json(orient="index"), mimetype="application/json")
+    
 @app.route("/raw_data/all", methods=["GET"])
 def return_all():
-    return Response(df_raw.to_json(orient="index"), mimetype="application/json")
+    return jsonify(df_raw)
