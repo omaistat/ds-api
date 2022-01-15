@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, Response
 import pandas as pd
 
 app = Flask(__name__)
@@ -12,4 +12,4 @@ df_raw = pd.read_excel('https://github.com/TechLabs-Berlin/wt21-pet-match/blob/m
 
 @app.route("/raw_data/all", methods=["GET"])
 def return_all():
-    return jsonify(df_raw)
+    return Response(df_raw.to_json(orient="index"), mimetype="application/json")
