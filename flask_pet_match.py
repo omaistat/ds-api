@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Response
+from flask import Flask, Response
 import pandas as pd
 import os
 import json
@@ -17,7 +17,3 @@ df_raw = pd.read_csv(file_path, sep=",")
 @app.route("/raw_data/json", methods=["GET"])
 def return_json():
     return Response(df_raw.to_json(orient="index"), mimetype="application/json")
-    
-@app.route("/raw_data/all", methods=["GET"])
-def return_all():
-    return jsonify(df_raw)
