@@ -17,7 +17,7 @@ def predict():
             query = pd.DataFrame(json_)
             query = query.reindex(columns=model_columns, fill_value=0)
             query_merged = cats.merge(query, how = 'cross')
-            prediction = list(LR.predict(query_merged))
+            prediction = list(lr.predict(query_merged))
             return jsonify({'prediction': prediction})
 
         except:
