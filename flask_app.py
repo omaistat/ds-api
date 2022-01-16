@@ -33,9 +33,9 @@ model_columns = joblib.load(file_path)
 def predict():
     if lr:
         try:
-            #json_ = request.json
-            #query = pd.DataFrame(json_)
-            #query = query.reindex(columns=model_columns, fill_value=0)
+            json_ = request.json
+            query = pd.DataFrame(json_)
+            query = query.reindex(columns=model_columns, fill_value=0)
             #test prediction
             query = pd.DataFrame([[1,2,4,3,2,5,4,3,4,5,3,4,5,2,3,4,5,4,3]])
             query.columns = model_columns
