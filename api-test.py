@@ -9,7 +9,7 @@ app = Flask(__name__)
 df_raw = pd.read_csv('cleaned_data_num.csv')
 df = df_raw.set_index('id').drop(columns = 'breed')
 cats = df.iloc[:, :18]
-@app.route('/predict', methods=['POST']) # Your API endpoint URL would consist /predict
+@app.route('/predict', methods=['GET', 'POST']) # Your API endpoint URL would consist /predict
 def predict():
     if lr:
         try:
