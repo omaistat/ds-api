@@ -20,6 +20,8 @@ df = df_raw.set_index('id').drop(columns = 'breed')
 cats = df.iloc[:, :18]
 # a series with cats' IDs to connect to prediction later
 cats_ids = pd.Series(df.index)
+lr = joblib.load("model.pkl") # Load "model.pkl"
+model_columns = joblib.load("model_columns.pkl")
 
 @app.route('/predict', methods=['GET', 'POST']) # Your API endpoint URL would consist /predict
 def predict():
