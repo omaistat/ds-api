@@ -1,37 +1,58 @@
-from flask import Flask, Response, request, jsonify
-import pandas as pd
-import os
-import json
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from flask import Flask, request, jsonify
 import joblib
+import traceback
+import pandas as pd
+import numpy as np
+import os
+
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
 @app.route("/")
-def hello_techies():
-    return "<p>Hello from TechLabs!</p>"
-   
+def hello_world():
+    return "<p>Hello Techie!</p>"
+
 module_dir = os.path.abspath(os.path.dirname(__file__))
 file_path = os.path.join(module_dir, "cleaned_data_num.csv")
 df_raw = pd.read_csv(file_path)
+df = df_raw.set_index('id').drop(columns = 'breed')
+cats = df.iloc[:, :18]
+# a series with cats' IDs to connect to prediction later
+cats_ids = pd.Series(df.index)
 
-@app.route("/raw_data/json", methods=["GET"])
-def return_json():
-    return Response(df_raw.to_json(orient="index"), mimetype="application/json")
+@app.route('/predict', methods=['GET', 'POST']) # Your API endpoint URL would consist /predict
+def predict():
+    if lr:
+        try:
+            json_ = request.json
+            query = pd.DataFrame(json_)
+            query = query.reindex(columns=model_columns, fill_value=0)
+            #test prediction
+            #query = pd.DataFrame([[1,2,4,3,2,5,4,3,4,5,3,4,5,2,3,4,5,4,3]])
+            query.columns = model_columns
+            query_merged = cats.merge(query, how = 'cross')
+            prediction = pd.Series(lr.predict(query_merged))
+            output = pd.concat([cats_ids, prediction], axis = 1).set_index('id').to_json()
+            return jsonify({'output': output})
 
-@app.route("/api/id", methods=["GET"])
-def get_line_by_id():
-    if "id" in request.args:
-        id = int(request.args["id"])
+        except:
+
+            return jsonify({'trace': traceback.format_exc()})
     else:
-        return "Error: No id field provided. Please specify an id."
+        print ('Train the model first')
+        return ('No model here to use')
 
-    results = []
-    for i in df:
-        if df["id"] == id:
-            results.append(i)
-    return jsonify(results)
-    return Response(row.to_json(orient="index"), mimetype="application/json")
+if __name__ == '__main__':
+    try:
+        port = int(sys.argv[1]) # This is for a command-line input
+    except:
+        port = 12345 # If you don't provide any port the port will be set to 12345
+
+    lr = joblib.load("model.pkl") # Load "model.pkl"
+    print ('Model loaded')
+    model_columns = joblib.load("model_columns.pkl") # Load "model_columns.pkl"
+    print ('Model columns loaded')
+
+    app.run(port=port, debug=True)
+
