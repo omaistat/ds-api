@@ -14,7 +14,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random
 lr = LinearRegression()
 lr.fit(X_train,y_train)
 
-joblib.dump(LR, 'model.pkl')
+joblib.dump(lr, 'model.pkl')
 lr = joblib.load('model.pkl')
 
 adopters = df.iloc[:, 18:37]
