@@ -4,9 +4,21 @@ import joblib
 import traceback
 import pandas as pd
 import numpy as np
+import os
+
 
 app = Flask(__name__)
-df_raw = pd.read_csv('cleaned_data_num.csv')
+app.config["DEBUG"] = True
+
+module_dir = os.path.abspath(os.path.dirname(__file__))
+file_path = os.path.join(module_dir, "cleaned_data_num.csv")
+df_raw = pd.read_csv(file_path, sep=";")
+
+
+@app.route("/")
+def hello_world():
+    return "<p>Hello, Techie!</p>"
+
 df = df_raw.set_index('id').drop(columns = 'breed')
 cats = df.iloc[:, :18]
 @app.route('/predict', methods=['GET', 'POST']) # Your API endpoint URL would consist /predict
