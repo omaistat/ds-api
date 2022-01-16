@@ -4,8 +4,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
-df_raw = pd.read_excel('https://github.com/TechLabs-Berlin/wt21-pet-match/blob/main/data_set/data_cleaned/all_cleaned_num.xlsx?raw=true')
-
+df_raw = pd.read_csv('cleaned_data_num.csv')
 # MODEL
 #df = df_raw.drop(columns = 'breed')
 df = df_raw.set_index('id').drop(columns = 'breed')
