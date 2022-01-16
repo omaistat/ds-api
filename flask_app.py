@@ -20,7 +20,10 @@ df = df_raw.set_index('id').drop(columns = 'breed')
 cats = df.iloc[:, :18]
 # a series with cats' IDs to connect to prediction later
 cats_ids = pd.Series(df.index)
-lr = joblib.load("model.pkl") # Load "model.pkl"
+
+module_dir = os.path.abspath(os.path.dirname(__file__))
+file_path = os.path.join(module_dir, "model.pkl")
+lr = joblib.load(file_path) # Load "model.pkl"
 
 module_dir = os.path.abspath(os.path.dirname(__file__))
 file_path = os.path.join(module_dir, "model_columns.pkl")
