@@ -41,7 +41,7 @@ def predict():
             query.columns = model_columns
             query_merged = cats.merge(query, how = 'cross')
             prediction = pd.Series(lr.predict(query_merged))
-            output = pd.concat([cats_ids, prediction], axis = 1).set_index('id').to_json()
+            output = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:11].drop(columns = 0).reset_index().to_json()
             return jsonify({'output': output})
 
         except:
