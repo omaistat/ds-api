@@ -16,17 +16,10 @@ def hello_world():
 module_dir = os.path.abspath(os.path.dirname(__file__))
 file_path = os.path.join(module_dir, "cleaned_data_num.csv")
 df_raw = pd.read_csv(file_path)
-
 df = df_raw.set_index('id').drop(columns = 'breed')
 cats = df.iloc[:, :18]
 # a series with cats' IDs to connect to prediction later
 cats_ids = pd.Series(df.index)
-
-module_dir = os.path.abspath(os.path.dirname(__file__))
-file_path = os.path.join(module_dir, "cats_num_sample _100.csv")
-cats_website = pd.read_csv(file_path)
-cats_website = cats_website.drop(columns = 'Other (please specify).1')
-cats_website.columns = ['id','cat_age', 'cat_gender', 'needs_outdoor', 'medical_conditions', 'behavioural_problems', 'cat_weight', 'likes_to_explore', 'playful', 'vocal', 'picked_up', 'timid', 'aggressive', 'adapts_quickly', 'prefers_alone', 'likes_stroke', 'tolerant_handled', 'friendly', 'fearful']
 
 module_dir = os.path.abspath(os.path.dirname(__file__))
 file_path = os.path.join(module_dir, "model.pkl")
@@ -70,4 +63,3 @@ if __name__ == '__main__':
     print ('Model columns loaded')
 
     app.run(port=port, debug=True)
-
