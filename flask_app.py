@@ -70,7 +70,7 @@ def predict():
             cats_website['key'] = 1
             query_merged = cats_website.merge(query_new,on='key', how='outer').drop(columns = 'key').set_index('id')
             prediction = pd.Series(lr.predict(query_merged))
-            output = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:11].drop(columns = 0).reset_index().to_json()
+            output = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:10].drop(columns = 0).reset_index().to_json()
             return jsonify({'output': output})
 
         except:
