@@ -66,9 +66,7 @@ def predict():
             query.columns = model_columns
             query_df = pd.DataFrame()
             query_new = query_df.append([query]*len(cats_website)).reset_index().drop(columns = ['index'])
-            query_new['key'] = 1
-            cats_website['key'] = 1
-            query_merged = cats_website.merge(query_new,on='key', how='outer').drop(columns = 'key').set_index('id')
+            query_merged = pd.concat([cats_website, query_new], axis = 1, join='outer').set_index('id')
             prediction = pd.Series(lr.predict(query_merged))
             output = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:10].drop(columns = 0).reset_index().to_json()
             return jsonify({'output': output})
