@@ -65,8 +65,12 @@ def predict():
             userID = query['userID'][0]
             userID_json = json.dumps(userID)
             #extracting user's answers
-            query_data = pd.DataFrame(query['allUserAnswer'])
-            query_data = query_data.reindex(columns=model_columns, fill_value=0)
+            query_data = pd.DataFrame(query['allUserAnswer']).transpose()
+            query_data['15'] = [0]
+            query_data['16'] = [0]
+            query_data['17'] = [0]
+            query_data['18'] = [0]
+            query_data.columns=model_columns
             #test prediction
             #query = pd.DataFrame([[1,2,4,3,2,5,4,3,4,5,3,4,5,2,3,4,5,4,3]])
             query_data.columns = model_columns
