@@ -4,10 +4,11 @@ import traceback
 import pandas as pd
 import numpy as np
 import os
-
+import json
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
+app.config['JSON_SORT_KEYS'] = False
 
 @app.route("/")
 def hello_world():
@@ -23,14 +24,14 @@ lr = joblib.load(file_path_2) # Load "model.pkl"
 file_path_3 = os.path.join(module_dir, "model_columns.pkl")
 model_columns = joblib.load(file_path_3)
 
-file_path_4 = os.path.join(module_dir, "cats_num_sample _100.csv")
+file_path_4 = os.path.join(module_dir, "cat_list_in_database.csv")
 cats_website=pd.read_csv(file_path_4)
 
 #cleaning df
 df = df_raw.set_index('id').drop(columns = 'breed')
 
 #cleaning cats data
-cats_website = cats_website.drop(columns = 'Other (please specify).1')
+cats_website = cats_website.drop(columns = 'breed')
 cats_website.columns = ['id','cat_age',
                                                       'cat_gender',
                                                       'needs_outdoor',
@@ -60,16 +61,32 @@ def predict():
         try:
             json_ = request.json
             query = pd.DataFrame(json_)
-            query = query.reindex(columns=model_columns, fill_value=0)
+            # extracting userID
+            userID = int(query['userID'][0])
+            list_id = ['userID', userID]
+            userID_json = json.dumps(userID)
+            #extracting user's answers
+            query_data = pd.DataFrame(query['allUserAnswer'])
+            query_data = query_data.reindex(columns=model_columns, fill_value=0)
             #test prediction
             #query = pd.DataFrame([[1,2,4,3,2,5,4,3,4,5,3,4,5,2,3,4,5,4,3]])
-            query.columns = model_columns
+            query_data.columns = model_columns
             query_df = pd.DataFrame()
-            query_new = query_df.append([query]*len(cats_website)).reset_index().drop(columns = ['index'])
+            query_new = query_df.append([query_data]*len(cats_website)).reset_index().drop(columns = ['index'])
             query_merged = pd.concat([cats_website, query_new], axis = 1, join='outer').set_index('id')
             prediction = pd.Series(lr.predict(query_merged))
-            output = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:10].drop(columns = 0).reset_index().to_json()
-            return jsonify({'output': output})
+            result = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:10].drop(columns = 0).reset_index()
+            result.columns = ['catID']
+            i = 1
+            result_list = []
+            for cat_id in result['catID']:
+                case = {'catOrder': i, 'catID': cat_id}
+                result_list.append(case.copy())
+                i += 1
+            #result_list.to_json()
+            #return jsonify({'result': result})
+            return jsonify({'userID': userID_json,
+            		    'result': result_list})
 
         except:
 
