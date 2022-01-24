@@ -62,8 +62,7 @@ def predict():
             json_ = request.json
             query = pd.DataFrame(json_)
             # extracting userID
-            userID = int(query['userID'][0])
-            list_id = ['userID', userID]
+            userID = query['userID'][0]
             userID_json = json.dumps(userID)
             #extracting user's answers
             query_data = pd.DataFrame(query['allUserAnswer'])
