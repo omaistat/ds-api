@@ -45,7 +45,8 @@ website_cats_model.fit(cats_website_1)
 file_path_5 = os.path.join(module_dir, "model_users.pkl")
 neigh_users = joblib.load(file_path_5) # User model
 print ('User model loaded')
-model_user_columns = joblib.load('model_users_columns.pkl')
+file_path_6 = os.path.join(module_dir, "model_users_columns.pkl")
+model_user_columns = joblib.load(file_path_6)
 print ('Users model columns loaded')
 
 # API functions
