@@ -5,89 +5,89 @@ import pandas as pd
 import numpy as np
 import os
 import json
+from sklearn.neighbors import NearestNeighbors
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config['JSON_SORT_KEYS'] = False
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello Techie!</p>"
-
+# Defining the path
 module_dir = os.path.abspath(os.path.dirname(__file__))
+
+# Loading the data
 file_path_1 = os.path.join(module_dir, "cleaned_data_num.csv")
 df_raw = pd.read_csv(file_path_1)
 
-file_path_2 = os.path.join(module_dir, "model.pkl")
-lr = joblib.load(file_path_2) # Load "model.pkl"
+#deleting columns that are not used in MVP
+df_raw = df_raw.set_index('id').drop(columns = ['breed', 'easily_nervous', 'talkative', 'active_imagination', 'thorough job'])
 
-file_path_3 = os.path.join(module_dir, "model_columns.pkl")
-model_columns = joblib.load(file_path_3)
+# dropping low satisfaction level users
+df_happy = df_raw.loc[df_raw["satisf_level"] > 0.8].drop(columns=["satisf_level"]).reset_index(drop=True)
 
+# a subset with cats' features for the model
+df_cats = df_happy.loc[:, "cat_age":"fearful"] 
+df_cats
+print('cats data derived')
+
+# Load cats data from the website database
 file_path_4 = os.path.join(module_dir, "cat_list_in_database.csv")
 cats_website=pd.read_csv(file_path_4)
 
-#cleaning df
-df = df_raw.set_index('id').drop(columns = 'breed')
-
-#cleaning cats data
-cats_website = cats_website.drop(columns = 'breed')
-cats_website.columns = ['id','cat_age',
-                                                      'cat_gender',
-                                                      'needs_outdoor',
-                                                      'medical_conditions',
-                                                      'behavioural_problems',
-                                                      'cat_weight',
-                                                      'likes_to_explore',
-                                                      'playful',
-                                                      'vocal',
-                                                      'picked_up',
-                                                      'timid',
-                                                      'aggressive',
-                                                      'adapts_quickly',
-                                                      'prefers_alone',
-                                                      'likes_stroke',
-                                                      'tolerant_handled',
-                                                      'friendly',
-                                                      'fearful'
+#cleaning cats data and preparing for model fitting
+cats_website_1 = cats_website.drop(columns = ['breed', 'catID'])
+cats_website_1.columns = ['cat_age','cat_gender','needs_outdoor','medical_conditions','behavioural_problems','cat_weight','likes_to_explore','playful','vocal','picked_up','timid','aggressive','adapts_quickly','prefers_alone','likes_stroke','tolerant_handled','friendly','fearful'
 ]
+# fitting nearest neighbor model on currently available cats from the website
+website_cats_model = NearestNeighbors(n_neighbors=10, metric = 'correlation')
+website_cats_model.fit(cats_website_1)
+
+#loading user model
+neigh_users = joblib.load('model_users.pkl') # User model
+print ('User model loaded')
+model_user_columns = joblib.load('model_users_columns.pkl')
+print ('Users model columns loaded')
+
+# API functions
+
+@app.route("/") # main page
+def hello_world():
+    return "<p>Hello Techie!</p>"
 
 
+# prediction
 
-
-@app.route('/predict', methods=['GET', 'POST']) # Your API endpoint URL would consist /predict
+@app.route('/predict', methods=['GET', 'POST']) # API endpoint URL for prediction
 def predict():
-    if lr:
+    if neigh_users:
         try:
+            # processing input
             json_ = request.json
             query = pd.DataFrame(json_)
+            
             # extracting userID
             userID = query['userID'][0]
             userID_json = json.dumps(userID)
+            
             #extracting user's answers
             query_data = pd.DataFrame(query['allUserAnswer']).transpose()
-            query_data['15'] = [0]
-            query_data['16'] = [0]
-            query_data['17'] = [0]
-            query_data['18'] = [0]
-            query_data.columns=model_columns
-            #test prediction
-            #query = pd.DataFrame([[1,2,4,3,2,5,4,3,4,5,3,4,5,2,3,4,5,4,3]])
-            query_data.columns = model_columns
-            query_df = pd.DataFrame()
-            query_new = query_df.append([query_data]*len(cats_website)).reset_index().drop(columns = ['index'])
-            query_merged = pd.concat([cats_website, query_new], axis = 1, join='outer').set_index('id')
-            prediction = pd.Series(lr.predict(query_merged))
-            result = pd.DataFrame(prediction).sort_values(by = 0, ascending = False).iloc[:10].drop(columns = 0).reset_index()
+            query_data.columns=model_user_columns
+            
+            # finding nearest person in the database, that gives us info on his cat
+            nearest_user = int(neigh_users.kneighbors(query_data, return_distance=False))
+            
+            # finding the most similar available cats to the one from the database
+            result = pd.DataFrame(website_cats_model.kneighbors(pd.DataFrame(df_cats.iloc[nearest_user]).transpose(), return_distance=False)).transpose()
             result.columns = ['catID']
-            i = 1
+            
+            # puts together a json-like string for output 
             result_list = []
+            i=1
             for cat_id in result['catID']:
                 case = {'catOrder': i, 'catID': cat_id}
                 result_list.append(case.copy())
                 i += 1
-            #result_list.to_json()
-            #return jsonify({'result': result})
+            
+            # returning the json output
             return jsonify({'userID': userID_json,
             		    'result': result_list})
 
@@ -100,13 +100,8 @@ def predict():
 
 if __name__ == '__main__':
     try:
-        port = int(sys.argv[1]) # This is for a command-line input
+        port = int(sys.argv[1]) # this is for a command-line input
     except:
-        port = 12345 # If you don't provide any port the port will be set to 12345
-
-    lr = joblib.load("model.pkl") # Load "model.pkl"
-    print ('Model loaded')
-    model_columns = joblib.load("model_columns.pkl") # Load "model_columns.pkl"
-    print ('Model columns loaded')
-
+        port = 12345 # default port
+    
     app.run(port=port, debug=True)
