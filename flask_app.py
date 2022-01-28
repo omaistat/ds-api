@@ -42,7 +42,8 @@ website_cats_model = NearestNeighbors(n_neighbors=10, metric = 'correlation')
 website_cats_model.fit(cats_website_1)
 
 #loading user model
-neigh_users = joblib.load('model_users.pkl') # User model
+file_path_5 = os.path.join(module_dir, "model_users.pkl")
+neigh_users = joblib.load(file_path_5) # User model
 print ('User model loaded')
 model_user_columns = joblib.load('model_users_columns.pkl')
 print ('Users model columns loaded')
